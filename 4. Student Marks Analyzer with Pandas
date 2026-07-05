@@ -1,0 +1,57 @@
+import pandas as pd
+import numpy as np
+# Create dummy student marks data
+data = {
+    'Student ID': [101, 102, 103, 104, 105, 106, 107, 108, 109, 110],
+    'Name': ['Alice', 'Bob', 'Charlie', 'David', 'Eve', 'Frank', 'Grace', 'Heidi', 'Ivan', 'Judy'],
+    'Score': [85, 45, 92, 78, 60, 55, 70, 88, 30, 65],
+    'Attendance': [0.95, 0.80, 0.98, 0.75, 0.90, 0.82, 0.88, 0.99, 0.70, 0.85]
+}
+df_marks = pd.DataFrame(data)
+
+# Save to a CSV file
+dummy_marks_filepath = 'student_marks.csv'
+df_marks.to_csv(dummy_marks_filepath, index=False)
+
+print(f"Dummy student marks data saved to '{dummy_marks_filepath}'")
+
+# Load the data into a Pandas DataFrame
+df = pd.read_csv(dummy_marks_filepath)
+display(df.head())
+passing_score = 60
+
+df_passed = df[df['Score'] >= passing_score]
+df_failed = df[df['Score'] < passing_score]
+
+print("\n--- Students Who Passed ---")
+display(df_passed)
+
+print("\n--- Students Who Failed ---")
+display(df_failed)
+df_sorted = df.sort_values(by='Score', ascending=False)
+
+print("\n--- Students Sorted by Score (Highest to Lowest) ---")
+display(df_sorted)
+def assign_grade(score):
+    if score >= 90:
+        return 'A'
+    elif score >= 80:
+        return 'B'
+    elif score >= 70:
+        return 'C'
+    elif score >= 60:
+        return 'D'
+    else:
+        return 'F'
+
+df['Grade'] = df['Score'].apply(assign_grade)
+
+print("\n--- DataFrame with Grades Assigned ---")
+display(df)
+cleaned_marks_filepath = 'cleaned_student_marks.csv'
+df.to_csv(cleaned_marks_filepath, index=False)
+
+print(f"Cleaned student marks data exported to '{cleaned_marks_filepath}'")
+
+# Optional: Display the first few rows of the exported CSV to verify
+# pd.read_csv(cleaned_marks_filepath).head()
