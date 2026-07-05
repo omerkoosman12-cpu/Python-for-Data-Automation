@@ -1,0 +1,82 @@
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+
+class BookScraper:
+    def __init__(self, base_url='http://books.toscrape.com/'):
+        self.base_url = base_url
+        self.books_data = []
+
+    def _get_page_content(self, url):
+        """Fetches the content of a given URL."""
+        try:
+            response = requests.get(url)
+            response.raise_for_status()  # Raise an HTTPError for bad responses (4xx or 5xx)
+            return response.text
+        except requests.exceptions.RequestException as e:
+            print(f"Error fetching {url}: {e}")
+            return None
+
+    def _parse_book_details(self, book_soup):
+        """Parses a single book's details from its BeautifulSoup object."""
+        title = book_soup.h3.a['title']
+        price = float(book_soup.find('p', class_='price_color').text.replace('Â£', ''))
+        rating_text = book_soup.find('p', class_='star-rating')['class'][1]
+        
+        # Convert star rating text to a numerical value
+        rating_map = {'One': 1, 'Two': 2, 'Three': 3, 'Four': 4, 'Five': 5}
+        rating = rating_map.get(rating_text, 0)
+        
+        return {'Title': title, 'Price': price, 'Rating': rating}
+
+    def scrape_books(self, num_pages=1):
+        """Scrapes book data from multiple pages."""
+        print(f"Starting to scrape {num_pages} page(s) from {self.base_url}")
+        for page_num in range(1, num_pages + 1):
+            page_url = f"{self.base_url}catalogue/page-{page_num}.html"
+            print(f"Scraping page: {page_url}")
+            html_content = self._get_page_content(page_url)
+            if html_content:
+                soup = BeautifulSoup(html_content, 'html.parser')
+                books = soup.find_all('article', class_='product_pod')
+                for book in books:
+                    self.books_data.append(self._parse_book_details(book))
+            else:
+                print(f"Could not retrieve content for {page_url}. Skipping.")
+                break # Stop if a page fails to load
+        print("Scraping complete.")
+
+    def save_to_csv(self, filename='books_data.csv'):
+        """Saves the scraped book data to a CSV file."""
+        if not self.books_data:
+            print("No data to save. Please run scrape_books first.")
+            return
+
+        df = pd.DataFrame(self.books_data)
+        df.to_csv(filename, index=False)
+        print(f"Data saved to {filename}")
+
+    def get_scraped_data(self):
+        """Returns the scraped data as a list of dictionaries."""
+        return self.books_data
+# Initialize the scraper
+scraper = BookScraper()
+
+# Scrape data from 3 pages (you can change this number)
+scraper.scrape_books(num_pages=3)
+
+# Get the scraped data
+books_df = pd.DataFrame(scraper.get_scraped_data())
+
+print("\n--- Sample of Scraped Data ---")
+display(books_df.head())
+
+# Save the data to a CSV file
+csv_filename = 'scraped_books.csv'
+scraper.save_to_csv(csv_filename)
+
+print(f"\n--- Contents of '{csv_filename}' ---")
+# Read and display the first few lines of the CSV to verify
+with open(csv_filename, 'r') as f:
+    for _ in range(6):
+        print(f.readline().strip())
