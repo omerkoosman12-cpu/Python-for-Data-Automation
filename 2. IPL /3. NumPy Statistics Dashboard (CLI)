@@ -1,0 +1,104 @@
+import numpy as np
+import pandas as pd # pandas is useful for reading CSVs and handling dataframes
+
+def numpy_statistics_dashboard(filepath, column_name=None):
+    """
+    Computes and displays descriptive statistics for a given dataset using NumPy.
+
+    Args:
+        filepath (str): Path to the dataset file (e.g., CSV).
+        column_name (str, optional): The name of the column to analyze. 
+                                     If None, statistics will be computed for all numeric columns.
+    """
+    try:
+        # Assuming the dataset is a CSV file. Adjust if other formats are expected.
+        df = pd.read_csv(filepath)
+        print(f"--- NumPy Statistics Dashboard for: {filepath} ---")
+        
+        if column_name:
+            if column_name not in df.columns:
+                print(f"Error: Column '{column_name}' not found in the dataset.")
+                return
+            data = df[column_name].dropna().to_numpy()
+            if not np.issubdtype(data.dtype, np.number):
+                print(f"Error: Column '{column_name}' is not numeric. Cannot compute statistics.")
+                return
+            print(f"Statistics for column: '{column_name}'")
+            
+            if data.size == 0:
+                print("No numeric data available for analysis in this column.")
+                return
+
+            mean_val = np.mean(data)
+            median_val = np.median(data)
+            std_dev = np.std(data)
+            min_val = np.min(data)
+            max_val = np.max(data)
+
+            print(f"  Mean:           {mean_val:.2f}")
+            print(f"  Median:         {median_val:.2f}")
+            print(f"  Std Deviation:  {std_dev:.2f}")
+            print(f"  Min:            {min_val:.2f}")
+            print(f"  Max:            {max_val:.2f}")
+            
+        else: # Analyze all numeric columns
+            numeric_cols = df.select_dtypes(include=np.number).columns
+            if len(numeric_cols) == 0:
+                print("No numeric columns found in the dataset for analysis.")
+                return
+
+            for col in numeric_cols:
+                data = df[col].dropna().to_numpy()
+                if data.size == 0:
+                    print(f"Statistics for column: '{col}' - No numeric data available.")
+                    continue
+                    
+                mean_val = np.mean(data)
+                median_val = np.median(data)
+                std_dev = np.std(data)
+                min_val = np.min(data)
+                max_val = np.max(data)
+
+                print(f"\nStatistics for column: '{col}'")
+                print(f"  Mean:           {mean_val:.2f}")
+                print(f"  Median:         {median_val:.2f}")
+                print(f"  Std Deviation:  {std_dev:.2f}")
+                print(f"  Min:            {min_val:.2f}")
+                print(f"  Max:            {max_val:.2f}")
+
+    except FileNotFoundError:
+        print(f"Error: The file '{filepath}' was not found.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+# --- Demo Usage ---
+# Create a dummy CSV file for demonstration
+dummy_data = {
+    'col_a': [10, 20, 30, 40, 50, np.nan],
+    'col_b': [1.5, 2.3, 1.8, 2.0, 2.5, 1.9],
+    'col_c': ['apple', 'banana', 'orange', 'grape', 'kiwi', 'pear']
+}
+dummy_df = pd.DataFrame(dummy_data)
+dummy_filepath = 'dummy_dataset.csv'
+dummy_df.to_csv(dummy_filepath, index=False)
+
+print("\n--- Running Dashboard Demo ---")
+print("\n--- All Numeric Columns ---")
+numpy_statistics_dashboard(dummy_filepath)
+
+print("\n--- Specific Numeric Column (col_a) ---")
+numpy_statistics_dashboard(dummy_filepath, column_name='col_a')
+
+print("\n--- Specific Non-Numeric Column (col_c) ---")
+numpy_statistics_dashboard(dummy_filepath, column_name='col_c')
+
+print("\n--- Non-existent Column ---")
+numpy_statistics_dashboard(dummy_filepath, column_name='col_d')
+
+print("\n--- Non-existent File ---")
+numpy_statistics_dashboard('non_existent_file.csv')
+
+# You can replace 'dummy_dataset.csv' with your actual dataset file path.
+# For example:
+# numpy_statistics_dashboard('your_data.csv')
+# numpy_statistics_dashboard('your_data.csv', column_name='your_numeric_column')
